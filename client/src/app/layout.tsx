@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import { Providers } from "@/components/global/providers";
 
 export const metadata: Metadata = {
-	title: "Luma",
+	title: "Luma AI",
 	icons: [{ rel: "icon", url: "/favicon/favicon.ico" }],
 	description:
 		"Meet your AI therapy companion—blending the warmth of a friend with the insight of a guide, so you never have to face life's challenges alone",
@@ -31,7 +31,7 @@ export default function RootLayout({
 			</head>
 			<body className={`antialiased`}>
 				<Providers>{children}</Providers>
-				<Toaster closeButton position="bottom-center" theme="system" richColors />
+				<Toaster closeButton position="bottom-center" theme="system" richColors expand={false} visibleToasts={3} />
 			</body>
 		</html>
 	);

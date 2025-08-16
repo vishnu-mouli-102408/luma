@@ -28,6 +28,14 @@ const CircleFilled = ({ className, size = 24, ...props }: SpinnerVariantProps) =
 	</div>
 );
 
+const ConcentricLoader = ({ className }: SpinnerVariantProps) => (
+	<div className={cn("flex w-full flex-col items-center justify-center gap-4", className)}>
+		<div className="flex h-10 w-10 animate-spin items-center justify-center rounded-full border-2 border-transparent border-t-blue-400 text-4xl text-blue-400">
+			<div className="flex h-8 w-8 animate-spin items-center justify-center rounded-full border-2 border-transparent border-t-red-400 text-2xl text-red-400"></div>
+		</div>
+	</div>
+);
+
 const Ellipsis = ({ size = 24, ...props }: SpinnerVariantProps) => {
 	return (
 		<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" {...props}>
@@ -193,7 +201,16 @@ const Infinite = ({ size = 24, ...props }: SpinnerVariantProps) => (
 );
 
 export type SpinnerProps = LucideProps & {
-	variant?: "default" | "circle" | "pinwheel" | "circle-filled" | "ellipsis" | "ring" | "bars" | "infinite";
+	variant?:
+		| "default"
+		| "circle"
+		| "pinwheel"
+		| "circle-filled"
+		| "ellipsis"
+		| "ring"
+		| "bars"
+		| "infinite"
+		| "concentric";
 };
 
 export const Spinner = ({ variant, ...props }: SpinnerProps) => {
@@ -212,6 +229,8 @@ export const Spinner = ({ variant, ...props }: SpinnerProps) => {
 			return <Bars {...props} />;
 		case "infinite":
 			return <Infinite {...props} />;
+		case "concentric":
+			return <ConcentricLoader {...props} />;
 		default:
 			return <Default {...props} />;
 	}
