@@ -22,7 +22,7 @@ function main() {
 			credentials: true,
 		})
 	);
-	app.all("/api/auth/*splat", toNodeHandler(auth));
+	app.all("/api/auth/{*any}", toNodeHandler(auth));
 	app.use("/api", authenticate);
 	app.use(rateLimiter({ windowInSeconds: RATE_LIMIT_WINDOW, maxRequests: RATE_LIMIT_MAX_REQUESTS }));
 	app.use(express.json());

@@ -140,7 +140,7 @@ export default function Header() {
 
 						<motion.div className="hidden items-center space-x-3 lg:flex" variants={itemVariants}>
 							<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-								<Link prefetch={false} href="/signup">
+								<Link prefetch={false} href="/sign-in">
 									<Button className="cursor-pointer">Sign In</Button>
 								</Link>
 							</motion.div>
@@ -194,7 +194,7 @@ export default function Header() {
 								<motion.div className="border-border space-y-3 border-t pt-6" variants={mobileItemVariants}>
 									<Link
 										prefetch={false}
-										href="/login"
+										href="/sign-in"
 										className="text-foreground hover:bg-muted block w-full rounded-lg py-3 text-center font-medium transition-colors duration-200"
 										onClick={() => setIsMobileMenuOpen(false)}
 									>
@@ -202,7 +202,7 @@ export default function Header() {
 									</Link>
 									<Link
 										prefetch={false}
-										href="/signup"
+										href="/sign-in"
 										className="bg-foreground text-background hover:bg-foreground/90 block w-full rounded-lg py-3 text-center font-medium transition-all duration-200"
 										onClick={() => setIsMobileMenuOpen(false)}
 									>
