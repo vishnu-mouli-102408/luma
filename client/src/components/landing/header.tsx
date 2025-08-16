@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import { ToggleTheme } from "../global/toggle-theme";
 
 interface NavItem {
 	name: string;
@@ -138,13 +139,17 @@ export default function Header() {
 							))}
 						</nav>
 
-						<motion.div className="hidden items-center space-x-3 lg:flex" variants={itemVariants}>
-							<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-								<Link prefetch={false} href="/sign-in">
-									<Button className="cursor-pointer">Sign In</Button>
-								</Link>
+						<div className="flex items-center space-x-3">
+							<ToggleTheme />
+
+							<motion.div className="hidden items-center space-x-3 lg:flex" variants={itemVariants}>
+								<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+									<Link prefetch={false} href="/sign-in">
+										<Button className="cursor-pointer">Sign In</Button>
+									</Link>
+								</motion.div>
 							</motion.div>
-						</motion.div>
+						</div>
 
 						<motion.button
 							className="text-foreground hover:bg-muted rounded-lg p-2 transition-colors duration-200 lg:hidden"
