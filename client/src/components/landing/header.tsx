@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../ui/button";
-import { ToggleTheme } from "../global/toggle-theme";
+import { AnimatedThemeToggler } from "../magicui/animated-theme-toggler";
 
 interface NavItem {
 	name: string;
@@ -94,7 +94,7 @@ export default function Header() {
 						>
 							<Link prefetch={false} href="/" className="flex items-center space-x-3">
 								<div className="relative">
-									<div className="flex h-9 w-9 items-center justify-center rounded-xl  shadow-lg">
+									<div className="flex h-9 w-9 items-center justify-center rounded-xl">
 										<Image src="/logo.svg" alt="Luma AI" width={60} height={60} />
 									</div>
 								</div>
@@ -140,7 +140,8 @@ export default function Header() {
 						</nav>
 
 						<div className="flex items-center space-x-3">
-							<ToggleTheme />
+							{/* <ToggleTheme /> */}
+							<AnimatedThemeToggler />
 
 							<motion.div className="hidden items-center space-x-3 lg:flex" variants={itemVariants}>
 								<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
