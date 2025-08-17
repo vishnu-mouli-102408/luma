@@ -1,3 +1,4 @@
+import Features from "@/components/landing/features";
 import HeroSection from "@/components/landing/hero";
 import HowItWorks from "@/components/landing/how-it-works";
 
@@ -6,6 +7,7 @@ export default function Home() {
 		<div className="pt-16">
 			<HeroSection />
 			<HowItWorks />
+			<Features />
 		</div>
 	);
 }
