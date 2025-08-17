@@ -35,7 +35,7 @@ const features = [
 
 export default function Features() {
 	return (
-		<section className="relative py-14">
+		<section id="features" className="relative py-14">
 			<div className="mx-auto max-w-screen-xl px-4 md:px-8">
 				<div className="relative mx-auto max-w-2xl sm:text-center">
 					<div className="relative z-10">
