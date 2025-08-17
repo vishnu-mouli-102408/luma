@@ -100,7 +100,7 @@ export default function Header() {
 								</div>
 								<div className="flex flex-col">
 									<span className="text-foreground text-lg font-bold">Luma AI</span>
-									<span className="text-muted-foreground -mt-1 text-xs">Your safe space, anytime.</span>
+									<span className="text-muted-foreground -mt-1 font-semibold text-xs">Your safe space, anytime.</span>
 								</div>
 							</Link>
 						</motion.div>
