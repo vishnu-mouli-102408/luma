@@ -1,7 +1,14 @@
-const DashboardPage = async () => {
+import DashboardHeader from "@/components/dashboard/header";
+import DashboardMainContent from "@/components/dashboard/main-content";
+import { Container } from "@/components/ui/container";
+
+const DashboardPage = () => {
 	return (
-		<div className="flex flex-col items-center justify-center">
-			<h1 className="text-2xl font-bold">Dashboard</h1>
+		<div className="min-h-screen bg-background">
+			<Container className="space-y-6 pt-12 pb-8">
+				<DashboardHeader />
+				<DashboardMainContent />
+			</Container>
 		</div>
 	);
 };
