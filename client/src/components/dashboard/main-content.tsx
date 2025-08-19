@@ -16,7 +16,7 @@ import {
 	LucideIcon,
 	X,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import {
@@ -31,6 +31,7 @@ import {
 import { MoodForm } from "./mood-form";
 import { format } from "date-fns";
 import { ActivityLogger } from "./activity-logger";
+import { AnxietyGames } from "../games/anxiety-games";
 
 interface DailyStats {
 	moodScore: number | null;
@@ -105,6 +106,14 @@ const DashboardMainContent = () => {
 			description: "Planned for today",
 		},
 	];
+
+	const handleGamePlayed = useCallback(async (gameName: string, description: string) => {
+		try {
+			console.log("handle games played");
+		} catch (error) {
+			console.error("Error logging game activity:", error);
+		}
+	}, []);
 	return (
 		<div className="space-y-6">
 			{/* Top Cards Grid */}
@@ -285,6 +294,14 @@ const DashboardMainContent = () => {
 				{showActivityLogger && (
 					<ActivityLogger open={showActivityLogger} onOpenChange={setShowActivityLogger} onActivityLogged={() => {}} />
 				)}
+			</div>
+
+			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				{/* Left side - Spans 2 columns */}
+				<div className="lg:col-span-3 space-y-6">
+					{/* Anxiety Games - Now directly below Fitbit */}
+					<AnxietyGames onGamePlayed={handleGamePlayed} />
+				</div>
 			</div>
 		</div>
 	);
