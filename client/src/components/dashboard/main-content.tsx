@@ -8,13 +8,11 @@ import {
 	ArrowRight,
 	Heart,
 	BrainCircuit,
-	Loader2,
 	Activity,
 	Brain,
 	Trophy,
 	RefreshCw,
 	LucideIcon,
-	X,
 } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { Button } from "../ui/button";
@@ -43,7 +41,7 @@ interface DailyStats {
 
 const DashboardMainContent = () => {
 	const [showMoodModal, setShowMoodModal] = useState(false);
-	const [insights, setInsights] = useState<
+	const [insights] = useState<
 		{
 			title: string;
 			description: string;
@@ -51,7 +49,7 @@ const DashboardMainContent = () => {
 			priority: "low" | "medium" | "high";
 		}[]
 	>([]);
-	const [dailyStats, setDailyStats] = useState<DailyStats>({
+	const [dailyStats] = useState<DailyStats>({
 		moodScore: null,
 		completionRate: 100,
 		mindfulnessCount: 0,
@@ -64,9 +62,7 @@ const DashboardMainContent = () => {
 		toast.success("Therapy started");
 	};
 
-	const handleAICheckIn = () => {
-		toast.success("AI check-in started");
-	};
+	// Removed unused handleAICheckIn
 
 	const fetchDailyStats = () => {
 		toast.success("Daily stats fetched");
@@ -107,7 +103,7 @@ const DashboardMainContent = () => {
 		},
 	];
 
-	const handleGamePlayed = useCallback(async (gameName: string, description: string) => {
+	const handleGamePlayed = useCallback(async () => {
 		try {
 			console.log("handle games played");
 		} catch (error) {
@@ -119,16 +115,20 @@ const DashboardMainContent = () => {
 			{/* Top Cards Grid */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{/* Quick Actions Card */}
-				<Card className="border-primary/10 relative overflow-hidden py-0 group">
+				<Card className="relative overflow-hidden py-0 group rounded-xl border border-border bg-card/80 supports-[backdrop-filter]:bg-card/60 backdrop-blur shadow-sm">
 					<div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent" />
 					<CardContent className="p-6 relative">
 						<div className="space-y-6">
 							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+								<div className="w-10 h-10 rounded-full bg-primary/10 ring-1 ring-border flex items-center justify-center">
 									<Sparkles className="w-5 h-5 text-primary" />
 								</div>
 								<div>
-									<h3 className="font-semibold text-lg">Quick Actions</h3>
+									<h3 className="font-semibold text-lg tracking-tight">
+										<span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+											Quick Actions
+										</span>
+									</h3>
 									<p className="text-sm text-muted-foreground">Start your wellness journey</p>
 								</div>
 							</div>
@@ -138,13 +138,13 @@ const DashboardMainContent = () => {
 									variant="default"
 									className={cn(
 										"w-full justify-between rounded-xl cursor-pointer items-center p-6 h-auto group/button",
-										"bg-gradient-to-r from-primary/90 to-primary hover:from-primary hover:to-primary/90",
+										"bg-gradient-to-r from-primary to-primary/90 hover:to-primary",
 										"transition-all duration-200 group-hover:translate-y-[-2px]"
 									)}
 									onClick={handleStartTherapy}
 								>
 									<div className="flex items-center gap-3">
-										<div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+										<div className="w-8 h-8 rounded-full bg-white/10 ring-1 ring-white/20 flex items-center justify-center">
 											<MessageSquare className="w-4 h-4 text-white" />
 										</div>
 										<div className="text-left">
@@ -178,10 +178,10 @@ const DashboardMainContent = () => {
 												</div>
 											</Button>
 										</DialogTrigger>
-										<DialogOverlay className="bg-black/50 backdrop-blur-sm" />
-										<DialogContent className="sm:max-w-[425px]">
+										<DialogOverlay className="bg-black/40 supports-[backdrop-filter]:bg-black/30 backdrop-blur-sm" />
+										<DialogContent className="sm:max-w-[425px] rounded-xl border border-border bg-card/95 supports-[backdrop-filter]:bg-card/75 backdrop-blur shadow-lg">
 											<DialogHeader>
-												<DialogTitle>How are you feeling?</DialogTitle>
+												<DialogTitle className="tracking-tight">How are you feeling?</DialogTitle>
 												<DialogDescription>Move the slider to track your current mood</DialogDescription>
 											</DialogHeader>
 											<MoodForm onSuccess={() => setShowMoodModal(false)} />
@@ -197,7 +197,7 @@ const DashboardMainContent = () => {
 										)}
 										onClick={() => setShowActivityLogger(true)}
 									>
-										<div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-2">
+										<div className="w-10 h-10 rounded-full bg-blue-500/10 ring-1 ring-border flex items-center justify-center mb-2">
 											<BrainCircuit className="w-5 h-5 text-blue-500" />
 										</div>
 										<div>
@@ -212,11 +212,11 @@ const DashboardMainContent = () => {
 				</Card>
 
 				{/* Today's Overview Card */}
-				<Card className="border-primary/10">
+				<Card className="rounded-xl border border-border bg-card/80 supports-[backdrop-filter]:bg-card/60 backdrop-blur shadow-sm">
 					<CardHeader>
 						<div className="flex items-center justify-between">
 							<div>
-								<CardTitle>Today&apos;s Overview</CardTitle>
+								<CardTitle className="tracking-tight">Today&apos;s Overview</CardTitle>
 								<CardDescription>Your wellness metrics for {format(new Date(), "MMMM d, yyyy")}</CardDescription>
 							</div>
 							<Button
@@ -230,11 +230,11 @@ const DashboardMainContent = () => {
 						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="grid grid-cols-2 gap-3">
+						<div className="grid grid-cols-2 gap-4">
 							{wellnessStats.map((stat) => (
 								<div
 									key={stat.title}
-									className={cn("p-4 rounded-lg transition-all duration-200 hover:scale-[1.02]", stat.bgColor)}
+									className={cn("p-4 rounded-lg ring-1 ring-border transition-colors duration-200", stat.bgColor)}
 								>
 									<div className="flex items-center gap-2">
 										<stat.icon className={cn("w-5 h-5", stat.color)} />
@@ -252,9 +252,9 @@ const DashboardMainContent = () => {
 				</Card>
 
 				{/* Insights Card */}
-				<Card className="border-primary/10">
+				<Card className="rounded-xl border border-border bg-card/80 supports-[backdrop-filter]:bg-card/60 backdrop-blur shadow-sm">
 					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
+						<CardTitle className="flex items-center gap-2 tracking-tight">
 							<BrainCircuit className="w-5 h-5 text-primary" />
 							Insights
 						</CardTitle>
@@ -267,7 +267,7 @@ const DashboardMainContent = () => {
 									<div
 										key={index}
 										className={cn(
-											"p-4 rounded-lg space-y-2 transition-all hover:scale-[1.02]",
+											"p-4 rounded-lg space-y-2 transition-colors ring-1 ring-border",
 											insight.priority === "high"
 												? "bg-primary/10"
 												: insight.priority === "medium"

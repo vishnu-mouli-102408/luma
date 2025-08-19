@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { AnimatedThemeToggler } from "../magicui/animated-theme-toggler";
+import { authClient } from "@/lib/auth-client";
 
 interface NavItem {
 	name: string;
@@ -24,6 +25,7 @@ export default function Header() {
 	const [isScrolled, setIsScrolled] = useState(false);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+	const { data: user } = authClient.useSession();
 
 	useEffect(() => {
 		const handleScroll = () => {
@@ -140,27 +142,37 @@ export default function Header() {
 							))}
 						</nav>
 
-						<div className="flex items-center space-x-3">
+						<div className="hidden items-center space-x-3 lg:flex">
 							{/* <ToggleTheme /> */}
 							<AnimatedThemeToggler />
 
 							<motion.div className="hidden items-center space-x-3 lg:flex" variants={itemVariants}>
 								<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-									<Link prefetch={false} href="/sign-in">
-										<Button className="cursor-pointer">Sign In</Button>
-									</Link>
+									{user?.user?.email ? (
+										<Link prefetch={false} href="/dashboard">
+											<Button className="cursor-pointer">Get Started</Button>
+										</Link>
+									) : (
+										<Link prefetch={false} href="/sign-in">
+											<Button className="cursor-pointer">Sign In</Button>
+										</Link>
+									)}
 								</motion.div>
 							</motion.div>
 						</div>
 
-						<motion.button
-							className="text-foreground hover:bg-muted rounded-lg p-2 transition-colors duration-200 lg:hidden"
-							onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-							variants={itemVariants}
-							whileTap={{ scale: 0.95 }}
-						>
-							{isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-						</motion.button>
+						<div className="flex items-center space-x-3 lg:hidden">
+							{/* <ToggleTheme /> */}
+							<AnimatedThemeToggler />
+							<motion.button
+								className="text-foreground hover:bg-muted rounded-lg p-2 transition-colors duration-200 lg:hidden"
+								onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+								variants={itemVariants}
+								whileTap={{ scale: 0.95 }}
+							>
+								{isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+							</motion.button>
+						</div>
 					</div>
 				</div>
 			</motion.header>
@@ -199,22 +211,25 @@ export default function Header() {
 								</div>
 
 								<motion.div className="border-border space-y-3 border-t pt-6" variants={mobileItemVariants}>
-									<Link
-										prefetch={false}
-										href="/sign-in"
-										className="text-foreground hover:bg-muted block w-full rounded-lg py-3 text-center font-medium transition-colors duration-200"
-										onClick={() => setIsMobileMenuOpen(false)}
-									>
-										Sign In
-									</Link>
-									<Link
-										prefetch={false}
-										href="/sign-in"
-										className="bg-foreground text-background hover:bg-foreground/90 block w-full rounded-lg py-3 text-center font-medium transition-all duration-200"
-										onClick={() => setIsMobileMenuOpen(false)}
-									>
-										Get Started
-									</Link>
+									{user?.user?.email ? (
+										<Link
+											prefetch={false}
+											href="/dashboard"
+											className="bg-foreground text-background hover:bg-foreground/90 block w-full rounded-lg py-3 text-center font-medium transition-all duration-200"
+											onClick={() => setIsMobileMenuOpen(false)}
+										>
+											Get Started
+										</Link>
+									) : (
+										<Link
+											prefetch={false}
+											href="/sign-in"
+											className="bg-foreground text-background hover:bg-foreground/90 block w-full rounded-lg py-3 text-center font-medium transition-all duration-200"
+											onClick={() => setIsMobileMenuOpen(false)}
+										>
+											Sign In
+										</Link>
+									)}
 								</motion.div>
 							</div>
 						</motion.div>

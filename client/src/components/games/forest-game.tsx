@@ -88,7 +88,7 @@ export function ForestGame() {
 					}}
 					className="absolute inset-0"
 				>
-					<div className="absolute inset-0 bg-gradient-to-b from-green-500/20 to-transparent rounded-full blur-xl" />
+					<div className="absolute inset-0 bg-gradient-to-b from-green-500/20 to-transparent rounded-full blur-xl ring-1 ring-border" />
 					<div className="absolute inset-0 flex items-center justify-center">
 						<TreePine className="w-24 h-24 text-green-600" />
 					</div>

@@ -74,7 +74,7 @@ export function BreathingGame() {
 				<motion.div
 					initial={{ scale: 0 }}
 					animate={{ scale: 1 }}
-					className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center"
+					className="w-20 h-20 rounded-full bg-green-500/20 ring-1 ring-border flex items-center justify-center"
 				>
 					<Check className="w-10 h-10 text-green-500" />
 				</motion.div>
@@ -105,7 +105,7 @@ export function BreathingGame() {
 								scale: phase === "inhale" ? 1.5 : phase === "exhale" ? 1 : 1.2,
 							}}
 							transition={{ duration: 4, ease: "easeInOut" }}
-							className="absolute inset-0 bg-primary/10 rounded-full"
+							className="absolute inset-0 bg-primary/10 rounded-full ring-1 ring-border"
 						/>
 						<div className="absolute inset-0 flex items-center justify-center">
 							<Wind className="w-8 h-8 text-primary" />

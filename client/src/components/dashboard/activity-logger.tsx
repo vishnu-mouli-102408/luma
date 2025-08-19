@@ -91,10 +91,10 @@ export function ActivityLogger({ open, onOpenChange, onActivityLogged }: Activit
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogOverlay className="bg-black/50 backdrop-blur-sm" />
-			<DialogContent className="rounded-lg">
+			<DialogOverlay className="bg-black/40 supports-[backdrop-filter]:bg-black/30 backdrop-blur-sm" />
+			<DialogContent className="rounded-xl border border-border bg-card/95 supports-[backdrop-filter]:bg-card/75 backdrop-blur shadow-lg">
 				<DialogHeader>
-					<DialogTitle>Log Activity</DialogTitle>
+					<DialogTitle className="tracking-tight">Log Activity</DialogTitle>
 					<DialogDescription>Record your wellness activity</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>

@@ -1,6 +1,6 @@
 export default function CTA() {
 	return (
-		<section id="contact" className="relative py-14 flex justify-center items-center">
+		<section id="contact" className="relative py-14 px-4 flex justify-center items-center">
 			<div className="relative w-full max-w-4xl overflow-hidden rounded-[40px] bg-primary/70 p-6 sm:p-10 md:p-20">
 				<div className="absolute inset-0 hidden h-full w-full overflow-hidden md:block">
 					<div className="absolute top-1/2 right-[-45%] aspect-square h-[800px] w-[800px] -translate-y-1/2">

@@ -38,7 +38,9 @@ export function ZenGarden() {
 						whileHover={{ scale: 1.1 }}
 						whileTap={{ scale: 0.95 }}
 						onClick={() => setSelectedItem(item)}
-						className={`p-3 rounded-lg ${selectedItem.type === item.type ? "bg-primary/20" : "bg-primary/5"}`}
+						className={`p-3 rounded-lg ring-1 ring-border ${
+							selectedItem.type === item.type ? "bg-primary/20" : "bg-primary/5"
+						}`}
 					>
 						<span className="text-2xl">{item.icon}</span>
 					</motion.button>
@@ -47,7 +49,7 @@ export function ZenGarden() {
 
 			<div
 				onClick={handleCanvasClick}
-				className="relative w-full h-[400px] bg-primary/5 rounded-lg cursor-pointer overflow-hidden"
+				className="relative w-full h-[400px] bg-primary/5 rounded-lg cursor-pointer overflow-hidden ring-1 ring-border"
 			>
 				{placedItems.map((item, index) => (
 					<motion.div
