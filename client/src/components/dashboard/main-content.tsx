@@ -30,6 +30,7 @@ import { MoodForm } from "./mood-form";
 import { format } from "date-fns";
 import { ActivityLogger } from "./activity-logger";
 import { AnxietyGames } from "../games/anxiety-games";
+import { useRouter } from "next/navigation";
 
 interface DailyStats {
 	moodScore: number | null;
@@ -41,6 +42,7 @@ interface DailyStats {
 
 const DashboardMainContent = () => {
 	const [showMoodModal, setShowMoodModal] = useState(false);
+	const router = useRouter();
 	const [insights] = useState<
 		{
 			title: string;
@@ -59,7 +61,7 @@ const DashboardMainContent = () => {
 
 	const [showActivityLogger, setShowActivityLogger] = useState(false);
 	const handleStartTherapy = () => {
-		toast.success("Therapy started");
+		router.push("/therapy/new");
 	};
 
 	// Removed unused handleAICheckIn

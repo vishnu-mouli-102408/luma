@@ -8,7 +8,9 @@
 		"db:migrate": "prisma migrate dev --skip-generate",
 		"db:deploy": "prisma migrate deploy",
 		"db:studio": "prisma studio",
-		"dev": "bun run index.ts"
+		"dev": "bun run index.ts --watch",
+		"build": "tsc",
+		"start": "bun run index.ts"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
@@ -26,6 +28,8 @@
 		"cors": "^2.8.5",
 		"dotenv": "^17.2.1",
 		"express": "^5.1.0",
+		"helmet": "^8.1.0",
+		"inngest": "^3.40.1",
 		"ioredis": "^5.7.0",
 		"pino": "^9.9.0",
 		"pino-pretty": "^13.1.1"
