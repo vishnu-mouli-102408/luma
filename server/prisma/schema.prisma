@@ -15,16 +15,39 @@ datasource db {
 }
 
 
+enum ActivityType {
+  meditation
+  exercise
+  walking
+  reading
+  journaling
+  therapy
+}
+
+enum ChatRole {
+  user
+  assistant
+}
+
+enum ChatStatus {
+  active
+  completed
+  archived
+}
+
 model User {
   id             String    @id @default(uuid())
   email          String    @unique
   name           String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  emailVerified  Boolean
+  emailVerified   Boolean
   image          String?
   sessions       Session[]
   accounts       Account[]
+  chatSessions   ChatSession[]
+  activities     Activity[]
+  moods          Mood[]
   @@index([email])
   @@map("user")
 }
@@ -65,7 +88,7 @@ model Account {
 
 model Verification {
   id         String    @id
-  identifier String
+  identifier  String
   value      String
   expiresAt  DateTime
   createdAt  DateTime?
@@ -74,3 +97,67 @@ model Verification {
   @@map("verification")
 }
 
+model Activity {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type        ActivityType
+  name        String
+  description String?   // optional
+  duration    Int?      // optional, >= 0 
+  timestamp   DateTime  @default(now())
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, timestamp])
+}
+
+model ChatSession {
+  id        String        @id @default(uuid())
+  sessionId String        @unique
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  startTime DateTime
+  status    ChatStatus
+
+  messages  ChatMessage[]
+
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId, startTime])
+}
+
+model ChatMessage {
+  id        String        @id @default(uuid())
+  sessionId String
+  session   ChatSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  role      ChatRole
+  content   String
+  timestamp DateTime
+
+  // metadata
+  metadata  Json?         // store full metadata object in JSON (flexible)
+
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Mood {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  score     Int
+  note      String?
+  timestamp DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, timestamp])
+}
