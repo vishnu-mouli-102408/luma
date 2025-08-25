@@ -1,9 +1,6 @@
+import { genAI } from "../lib/ai";
 import { logger } from "../lib/logger";
 import { inngest } from "./client";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // Function to handle chat message processing
 export const processChatMessage = inngest.createFunction(
