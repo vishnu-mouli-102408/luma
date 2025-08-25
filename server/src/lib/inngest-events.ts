@@ -29,11 +29,9 @@ export const sendMoodUpdateEvent = async (moodData: any) => {
 			name: "mood/updated",
 			data: {
 				userId: moodData.userId,
-				mood: moodData.mood,
-				timestamp: new Date().toISOString(),
-				context: moodData.context,
-				activities: moodData.activities,
-				notes: moodData.notes,
+				score: moodData.score,
+				timestamp: moodData.timestamp,
+				note: moodData.note,
 				...moodData,
 			},
 		});
@@ -51,10 +49,11 @@ export const sendActivityCompletionEvent = async (activityData: any) => {
 			data: {
 				userId: activityData.userId,
 				activityId: activityData.id,
-				timestamp: new Date().toISOString(),
+				timestamp: activityData.timestamp,
 				duration: activityData.duration,
-				difficulty: activityData.difficulty,
-				feedback: activityData.feedback,
+				type: activityData.type,
+				name: activityData.name,
+				description: activityData.description,
 				...activityData,
 			},
 		});

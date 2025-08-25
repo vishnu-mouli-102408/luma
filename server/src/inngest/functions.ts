@@ -1,6 +1,7 @@
 import { inngest } from "./client";
 import { functions as aiFunctions } from "./ai-functions";
 import { logger } from "../lib/logger";
+import { prisma } from "../lib/db";
 
 // Function to handle therapy session events
 export const therapySessionHandler = inngest.createFunction(
@@ -47,27 +48,96 @@ export const moodTrackingHandler = inngest.createFunction(
 			logger.info({ event: event.data }, "Mood update received");
 		});
 
-		// Analyze mood patterns
+		// Validate payload
+		const { userId, score, note, timestamp } = await step.run("validate-mood-payload", async () => {
+			const data = event.data as {
+				userId?: string;
+				score?: number;
+				note?: string | null;
+				timestamp?: string | Date;
+			};
+			if (!data?.userId || typeof data?.score !== "number") {
+				throw new Error("Missing required fields in mood/updated event");
+			}
+			return data as Required<Pick<typeof data, "userId" | "score">> & Partial<Pick<typeof data, "note" | "timestamp">>;
+		});
+
+		// Analyze mood patterns from DB
 		const analysis = await step.run("analyze-mood-patterns", async () => {
-			// Add mood analysis logic here
+			const now = new Date();
+			const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+			const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+			const [last7Agg, last30Agg, lowsLast7, recentMoods] = await Promise.all([
+				prisma.mood.aggregate({
+					where: { userId, timestamp: { gte: sevenDaysAgo } },
+					_avg: { score: true },
+					_count: true,
+				}),
+				prisma.mood.aggregate({
+					where: { userId, timestamp: { gte: thirtyDaysAgo } },
+					_avg: { score: true },
+					_count: true,
+				}),
+				prisma.mood.count({ where: { userId, timestamp: { gte: sevenDaysAgo }, score: { lt: 3 } } }),
+				prisma.mood.findMany({ where: { userId }, orderBy: { timestamp: "desc" }, take: 5 }),
+			]);
+
+			const avg7 = last7Agg._avg.score ?? null;
+			const avg30 = last30Agg._avg.score ?? null;
+			let trend: "improving" | "declining" | "stable" = "stable";
+			if (avg7 !== null && avg30 !== null) {
+				if (avg7 - avg30 > 0.3) trend = "improving";
+				else if (avg30 - avg7 > 0.3) trend = "declining";
+			}
+
+			const recommendations: string[] = [];
+			if (score < 3 || lowsLast7 >= 2) {
+				recommendations.push("Consider a short mindfulness exercise");
+			}
+			if (trend === "declining") {
+				recommendations.push("Schedule a therapy session or reach out to support");
+			}
+
 			return {
-				trend: "improving", // This would be calculated based on historical data
-				recommendations: ["Consider scheduling a therapy session"],
+				avg7,
+				avg30,
+				trend,
+				lowsLast7,
+				recentMoods,
+				recommendations,
 			};
 		});
 
-		// If mood is concerning, trigger an alert
-		if (event.data.mood < 3) {
-			// Assuming mood is on a scale of 1-5
-			await step.run("trigger-alert", async () => {
-				logger.info({ event: event.data }, "Triggering alert for concerning mood");
-				// Add alert logic here
-			});
-		}
+		// Build alert payload to return in response (no external side-effects)
+		const alert = await step.run("build-alert-payload", async () => {
+			if (score < 3) {
+				return {
+					shouldAlert: true,
+					level: "high" as const,
+					reason: "Low mood score (<3)",
+					score,
+					note: note ?? null,
+					timestamp: timestamp ?? new Date().toISOString(),
+				};
+			}
+			if (analysis.trend === "declining" || analysis.lowsLast7 >= 2) {
+				return {
+					shouldAlert: true,
+					level: "medium" as const,
+					reason: analysis.trend === "declining" ? "Mood trend declining" : "Multiple low moods in last 7 days",
+					score,
+					note: note ?? null,
+					timestamp: timestamp ?? new Date().toISOString(),
+				};
+			}
+			return { shouldAlert: false as const };
+		});
 
 		return {
 			message: "Mood update processed",
 			analysis,
+			alert,
 		};
 	}
 );
@@ -82,21 +152,70 @@ export const activityCompletionHandler = inngest.createFunction(
 			logger.info({ event: event.data }, "Activity completed");
 		});
 
-		// Update user progress
-		const progress = await step.run("update-progress", async () => {
-			// Add progress tracking logic here
+		// Validate payload
+		const { userId, activityId, type, name, duration, timestamp } = await step.run("validate-payload", async () => {
+			const data = event.data as {
+				userId?: string;
+				activityId?: string;
+				type?: string;
+				name?: string;
+				description?: string | null;
+				duration?: number | null;
+				timestamp?: string | Date;
+			};
+
+			if (!data?.userId || !data?.activityId || !data?.type || !data?.name) {
+				throw new Error("Missing required fields in activity/completed event");
+			}
+			return data as Required<Pick<typeof data, "userId" | "activityId" | "type" | "name">> &
+				Partial<Pick<typeof data, "duration" | "timestamp">>;
+		});
+
+		// Compute user progress aggregates
+		const progress = await step.run("compute-progress", async () => {
+			const [totalCount, durationAgg] = await Promise.all([
+				prisma.activity.count({ where: { userId } }),
+				prisma.activity.aggregate({
+					where: { userId },
+					_sum: { duration: true },
+				}),
+			]);
+
+			const totalDurationMinutes = durationAgg._sum.duration ?? 0;
+
+			// Simple points heuristic: 10 per activity + 1 per 5 minutes
+			const totalPoints = totalCount * 10 + Math.floor(totalDurationMinutes / 5);
+
 			return {
-				completedActivities: 1,
-				totalPoints: 10,
+				completedActivities: totalCount,
+				totalDurationMinutes,
+				totalPoints,
+				lastActivityId: activityId,
+				lastActivityAt: timestamp ?? new Date().toISOString(),
 			};
 		});
 
-		// Check if user has earned any achievements
-		const achievements = await step.run("check-achievements", async () => {
-			// Add achievement checking logic here
-			return {
-				newAchievements: ["First Activity Completed"],
-			};
+		// Determine achievements
+		const achievements = await step.run("determine-achievements", async () => {
+			const newAchievements: string[] = [];
+
+			if (progress.completedActivities === 1) {
+				newAchievements.push("First Activity Completed");
+			}
+			if (progress.completedActivities === 10) {
+				newAchievements.push("10 Activities Milestone");
+			}
+			if ((progress.totalDurationMinutes ?? 0) >= 30) {
+				newAchievements.push("30 Minutes Club");
+			}
+
+			// Type-specific small milestone (5 of same type)
+			const thisTypeCount = await prisma.activity.count({ where: { userId, type: type as any } });
+			if (thisTypeCount === 5) {
+				newAchievements.push(`${String(type)} Novice`);
+			}
+
+			return { newAchievements };
 		});
 
 		return {
