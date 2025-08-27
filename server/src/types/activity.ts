@@ -1,4 +1,4 @@
-import { z } from "better-auth";
+import { z } from "zod";
 
 export const activitySchema = z.object({
 	type: z.enum(["meditation", "exercise", "walking", "reading", "journaling", "therapy"]),
