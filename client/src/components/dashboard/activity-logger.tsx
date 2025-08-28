@@ -78,12 +78,37 @@ export function ActivityLogger({ open, onOpenChange, onActivityLogged }: Activit
 
 		setIsLoading(true);
 		try {
-			// TODO: send values to API if needed
+			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/activity/log-activity`, {
+				method: "POST",
+				credentials: "include",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					type: values.type,
+					name: values.name,
+					description: values.description,
+					duration: values.duration,
+					timestamp: new Date().toISOString(),
+				}),
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				toast.error(error.error || "Failed to log activity");
+				return;
+			}
+
+			const data = await response.json();
+			console.log("ActivityLogger: Success response:", data);
+
+			toast.success("Activity logged successfully!");
 			onActivityLogged();
 			onOpenChange(false);
 			form.reset();
 		} catch (error) {
 			console.error("Error logging activity:", error);
+			toast.error(error instanceof Error ? error.message : "Failed to log activity");
 		} finally {
 			setIsLoading(false);
 		}

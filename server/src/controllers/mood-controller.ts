@@ -10,15 +10,15 @@ export const createMood = async (req: Request, res: Response, next: NextFunction
 		const parsedPayload = moodSchema.safeParse(req?.body);
 
 		if (!parsedPayload.success) {
-			return res.status(400).json({ error: "Invalid payload" });
+			return res.status(400).json({ error: "Invalid payload", success: false });
 		}
 
-		const { score, note, timestamp } = parsedPayload.data;
+		const { score, note, timestamp = new Date().toISOString() } = parsedPayload.data;
 
 		const userId = req.user?.id; // From auth middleware
 
 		if (!userId) {
-			return res.status(401).json({ message: "User not authenticated" });
+			return res.status(401).json({ message: "User not authenticated", success: false });
 		}
 
 		const mood = await prisma.mood.create({

@@ -42,19 +42,16 @@ export function MoodForm({ onSuccess }: MoodFormProps) {
 
 		try {
 			setIsLoading(true);
-			const token = localStorage.getItem("token");
-			console.log("MoodForm: Token from localStorage:", token ? "exists" : "not found");
-
-			const response = await fetch("/api/mood", {
+			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mood/create-mood`, {
 				method: "POST",
+				credentials: "include",
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
 				},
-				body: JSON.stringify({ score: moodScore }),
+				body: JSON.stringify({ score: moodScore, timestamp: new Date().toISOString() }),
 			});
 
-			console.log("MoodForm: Response status:", response.status);
+			console.log("MoodForm: Response status:", response);
 
 			if (!response.ok) {
 				const error = await response.json();

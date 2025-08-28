@@ -5,7 +5,7 @@ export const activitySchema = z.object({
 	name: z.string(),
 	description: z.string().optional(),
 	duration: z.number().optional(),
-	timestamp: z.date(),
+	timestamp: z.string().optional(),
 });
 
 export type Activity = z.infer<typeof activitySchema>;

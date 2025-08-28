@@ -2,20 +2,14 @@
 
 import { motion } from "motion/react";
 import React, { useEffect, useState } from "react";
-import { Button } from "../ui/button";
-import { Bell } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Logout } from "../global/logout";
 
 const DashboardHeader = () => {
-	const [mounted, setMounted] = useState(false);
 	const [currentTime, setCurrentTime] = useState(new Date());
-	const router = useRouter();
 	const { data: user } = authClient.useSession();
 
 	useEffect(() => {
-		setMounted(true);
 		const timer = setInterval(() => setCurrentTime(new Date()), 1000);
 		return () => clearInterval(timer);
 	}, []);
