@@ -172,16 +172,16 @@ model SessionAnalysis {
   userId        String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Analysis results
-  keyThemes         String[]  // Array of themes discussed
-  emotionalState    String    // Primary emotional state
-  areasOfConcern    String[]  // Areas that need attention
-  recommendations   String[]  // Follow-up recommendations
-  progressIndicators String[] // Indicators of progress
-  riskLevel         Int       @default(0) // 0-10 risk assessment
+
+  keyThemes         String[]  
+  emotionalState    String    
+  areasOfConcern    String[]  
+  recommendations   String[]  
+  progressIndicators String[] 
+  riskLevel         Int       @default(0) 
   
   // Metadata
-  analysisData      Json?     // Full analysis object
+  analysisData      Json?     
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -194,18 +194,18 @@ model ActivityRecommendation {
   userId      String
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Recommendation details
-  activityType    String    // Type of recommended activity
-  title           String    // Title of the recommendation
-  description     String    // Detailed description
-  reasoning       String    // Why this was recommended
-  expectedBenefits String[] // Expected benefits
-  difficultyLevel String    // easy, medium, hard
-  estimatedDuration Int?    // Duration in minutes
+  
+  activityType    String    
+  title           String    
+  description     String    
+  reasoning       String    
+  expectedBenefits String[] 
+  difficultyLevel String    
+  estimatedDuration Int?    
   
   // Context
-  basedOnMoodScore Int?     // Mood score that triggered this
-  contextData      Json?    // Additional context data
+  basedOnMoodScore Int?     
+  contextData      Json?    
   
   // Status
   isCompleted      Boolean @default(false)

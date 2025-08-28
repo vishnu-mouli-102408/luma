@@ -96,10 +96,23 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
 			return acc;
 		}, [] as Array<{ type: string; count: number }>);
 
+		// Get recommendation completion rate
+		const [totalRecommendations, completedRecommendations] = await Promise.all([
+			prisma.activityRecommendation.count({
+				where: { userId },
+			}),
+			prisma.activityRecommendation.count({
+				where: { userId, isCompleted: true },
+			}),
+		]);
+
+		const recommendationCompletionRate =
+			totalRecommendations > 0 ? Math.round((completedRecommendations / totalRecommendations) * 100) : 0;
+
 		// Prepare dashboard statistics
 		const dashboardStats: DashboardStats = {
 			moodScore: averageMoodScore,
-			completionRate: 100, // Always 100% as per requirements
+			completionRate: recommendationCompletionRate,
 			totalActivities: todaysActivities.length,
 			therapySessions: allTherapySessions,
 			lastUpdated: new Date(),
@@ -113,6 +126,9 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
 					moods: todaysMoods.length,
 					activities: todaysActivities.length,
 					therapySessions: allTherapySessions,
+					totalRecommendations,
+					completedRecommendations,
+					completionRate: recommendationCompletionRate,
 				},
 			},
 			`Dashboard stats fetched for user ${userId}`
