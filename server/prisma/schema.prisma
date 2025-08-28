@@ -48,6 +48,8 @@ model User {
   chatSessions   ChatSession[]
   activities     Activity[]
   moods          Mood[]
+  sessionAnalyses SessionAnalysis[]
+  activityRecommendations ActivityRecommendation[]
   @@index([email])
   @@map("user")
 }
@@ -124,6 +126,7 @@ model ChatSession {
   status    ChatStatus
 
   messages  ChatMessage[]
+  analysis  SessionAnalysis?
 
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
@@ -160,4 +163,57 @@ model Mood {
   updatedAt DateTime @updatedAt
 
   @@index([userId, timestamp])
+}
+
+model SessionAnalysis {
+  id            String      @id @default(uuid())
+  sessionId     String      @unique
+  session       ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Analysis results
+  keyThemes         String[]  // Array of themes discussed
+  emotionalState    String    // Primary emotional state
+  areasOfConcern    String[]  // Areas that need attention
+  recommendations   String[]  // Follow-up recommendations
+  progressIndicators String[] // Indicators of progress
+  riskLevel         Int       @default(0) // 0-10 risk assessment
+  
+  // Metadata
+  analysisData      Json?     // Full analysis object
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+model ActivityRecommendation {
+  id          String @id @default(uuid())
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Recommendation details
+  activityType    String    // Type of recommended activity
+  title           String    // Title of the recommendation
+  description     String    // Detailed description
+  reasoning       String    // Why this was recommended
+  expectedBenefits String[] // Expected benefits
+  difficultyLevel String    // easy, medium, hard
+  estimatedDuration Int?    // Duration in minutes
+  
+  // Context
+  basedOnMoodScore Int?     // Mood score that triggered this
+  contextData      Json?    // Additional context data
+  
+  // Status
+  isCompleted      Boolean @default(false)
+  completedAt      DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([userId, isCompleted])
 }

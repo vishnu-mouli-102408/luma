@@ -153,10 +153,17 @@ export const activityCompletionHandler = inngest.createFunction(
 		});
 
 		// Validate payload
-		const { userId, activityId, type, name, duration, timestamp } = await step.run("validate-payload", async () => {
+		const {
+			userId,
+			id: activityId,
+			type,
+			name,
+			duration,
+			timestamp,
+		} = await step.run("validate-payload", async () => {
 			const data = event.data as {
 				userId?: string;
-				activityId?: string;
+				id?: string;
 				type?: string;
 				name?: string;
 				description?: string | null;
@@ -164,10 +171,10 @@ export const activityCompletionHandler = inngest.createFunction(
 				timestamp?: string | Date;
 			};
 
-			if (!data?.userId || !data?.activityId || !data?.type || !data?.name) {
+			if (!data?.userId || !data?.id || !data?.type || !data?.name) {
 				throw new Error("Missing required fields in activity/completed event");
 			}
-			return data as Required<Pick<typeof data, "userId" | "activityId" | "type" | "name">> &
+			return data as Required<Pick<typeof data, "userId" | "id" | "type" | "name">> &
 				Partial<Pick<typeof data, "duration" | "timestamp">>;
 		});
 

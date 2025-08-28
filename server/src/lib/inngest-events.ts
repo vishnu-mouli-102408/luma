@@ -48,7 +48,7 @@ export const sendActivityCompletionEvent = async (activityData: any) => {
 			name: "activity/completed",
 			data: {
 				userId: activityData.userId,
-				activityId: activityData.id,
+				id: activityData.id,
 				timestamp: activityData.timestamp,
 				duration: activityData.duration,
 				type: activityData.type,

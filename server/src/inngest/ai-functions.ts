@@ -1,5 +1,6 @@
 import { genAI } from "../lib/ai";
 import { logger } from "../lib/logger";
+import { prisma } from "../lib/db";
 import { inngest } from "./client";
 
 // Function to handle chat message processing
@@ -11,9 +12,14 @@ export const processChatMessage = inngest.createFunction(
 	{ event: "therapy/session.message" },
 	async ({ event, step }) => {
 		try {
+			// Validate required data
+			if (!event.data.message || typeof event.data.message !== "string") {
+				throw new Error("Message is required and must be a string");
+			}
+
 			const {
 				message,
-				history,
+				history = [],
 				memory = {
 					userProfile: {
 						emotionalState: [],
@@ -26,7 +32,7 @@ export const processChatMessage = inngest.createFunction(
 					},
 				},
 				goals = [],
-				systemPrompt,
+				systemPrompt = "You are a helpful AI therapy assistant. Provide supportive and professional responses.",
 			} = event.data;
 
 			logger.info({ message, historyLength: history?.length }, "Processing chat message:");
@@ -163,52 +169,135 @@ export const analyzeTherapySession = inngest.createFunction(
 	{ event: "therapy/session.created" },
 	async ({ event, step }) => {
 		try {
+			// Validate required data
+			if (!event.data.sessionId) {
+				throw new Error("Session ID is required for therapy session analysis");
+			}
+
 			// Get the session content
 			const sessionContent = await step.run("get-session-content", async () => {
-				return event?.data?.notes || event?.data?.transcript;
+				const content = event?.data?.notes || event?.data?.transcript;
+				if (!content || typeof content !== "string" || content.trim().length === 0) {
+					throw new Error("Session content (notes or transcript) is required and cannot be empty");
+				}
+				return content.trim();
 			});
 
 			// Analyze the session using Gemini
 			const analysis = await step.run("analyze-with-gemini", async () => {
-				const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+				try {
+					const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-				const prompt = `Analyze this therapy session and provide insights:
-					Session Content: ${sessionContent}
-					
-					Please provide:
-					1. Key themes and topics discussed
-					2. Emotional state analysis
-					3. Potential areas of concern
-					4. Recommendations for follow-up
-					5. Progress indicators
-					
-					Format the response as a JSON object.`;
+					const prompt = `Analyze this therapy session and provide insights. Return ONLY a valid JSON object with no markdown formatting or additional text.
+						Session Content: ${sessionContent}
+						
+						Required JSON structure:
+						{
+							"keyThemes": ["string"],
+							"emotionalState": "string",
+							"areasOfConcern": ["string"],
+							"recommendations": ["string"],
+							"progressIndicators": ["string"],
+							"riskLevel": number
+						}`;
 
-				const result = await model.generateContent(prompt);
-				const response = result.response;
-				const text = response.text().trim();
+					const result = await model.generateContent(prompt);
+					const response = result.response;
+					const text = response.text().trim();
 
-				return JSON.parse(text ?? "{}");
+					// Clean the response text to ensure it's valid JSON
+					const cleanText = text.replace(/```json\n|\n```/g, "").trim();
+					const parsedAnalysis = JSON.parse(cleanText);
+
+					// Validate required fields and provide defaults
+					return {
+						keyThemes: Array.isArray(parsedAnalysis.keyThemes) ? parsedAnalysis.keyThemes : [],
+						emotionalState: parsedAnalysis.emotionalState || "neutral",
+						areasOfConcern: Array.isArray(parsedAnalysis.areasOfConcern) ? parsedAnalysis.areasOfConcern : [],
+						recommendations: Array.isArray(parsedAnalysis.recommendations) ? parsedAnalysis.recommendations : [],
+						progressIndicators: Array.isArray(parsedAnalysis.progressIndicators)
+							? parsedAnalysis.progressIndicators
+							: [],
+						riskLevel:
+							typeof parsedAnalysis.riskLevel === "number" ? Math.max(0, Math.min(10, parsedAnalysis.riskLevel)) : 0,
+					};
+				} catch (error) {
+					logger.error({ error, sessionContent }, "Error in session analysis with Gemini:");
+					// Return default analysis structure
+					return {
+						keyThemes: [],
+						emotionalState: "neutral",
+						areasOfConcern: [],
+						recommendations: ["Continue regular sessions"],
+						progressIndicators: [],
+						riskLevel: 0,
+					};
+				}
 			});
 
-			// Store the analysis
-			await step.run("store-analysis", async () => {
-				// Here you would typically store the analysis in your database
-				logger.info({ analysis }, "Session analysis stored successfully");
-				return analysis;
+			// Store the analysis in database
+			const storedAnalysis = await step.run("store-analysis", async () => {
+				try {
+					// Get session and user data
+					const sessionData = await prisma.chatSession.findUnique({
+						where: { sessionId: event.data.sessionId },
+						include: { user: true },
+					});
+
+					if (!sessionData) {
+						throw new Error(`Chat session not found: ${event.data.sessionId}`);
+					}
+
+					// Create session analysis record
+					const sessionAnalysis = await prisma.sessionAnalysis.create({
+						data: {
+							sessionId: sessionData.id,
+							userId: sessionData.userId,
+							keyThemes: analysis.keyThemes,
+							emotionalState: analysis.emotionalState,
+							areasOfConcern: analysis.areasOfConcern,
+							recommendations: analysis.recommendations,
+							progressIndicators: analysis.progressIndicators,
+							riskLevel: analysis.riskLevel,
+							analysisData: analysis, // Store full analysis as JSON
+						},
+					});
+
+					logger.info(
+						{
+							sessionAnalysisId: sessionAnalysis.id,
+							sessionId: event.data.sessionId,
+							userId: sessionData.userId,
+							riskLevel: analysis.riskLevel,
+						},
+						"Session analysis stored successfully"
+					);
+
+					return sessionAnalysis;
+				} catch (error) {
+					logger.error({ error, sessionId: event.data.sessionId }, "Error storing session analysis:");
+					throw error;
+				}
 			});
 
 			// If there are concerning indicators, trigger an alert
-			if (analysis.areasOfConcern?.length > 0) {
+			if (analysis.areasOfConcern?.length > 0 || analysis.riskLevel > 5) {
 				await step.run("trigger-concern-alert", async () => {
 					logger.warn(
 						{
+							sessionAnalysisId: storedAnalysis.id,
 							sessionId: event.data.sessionId,
+							userId: storedAnalysis.userId,
 							concerns: analysis.areasOfConcern,
+							riskLevel: analysis.riskLevel,
 						},
 						"Concerning indicators detected in session analysis"
 					);
-					// Add your alert logic here
+
+					// TODO: Add notification system integration here
+					// - Send email to therapist
+					// - Create urgent task in admin dashboard
+					// - Send push notification to care team
 				});
 			}
 
@@ -229,49 +318,203 @@ export const generateActivityRecommendations = inngest.createFunction(
 	{ event: "mood/updated" },
 	async ({ event, step }) => {
 		try {
-			// Get user's mood history and activity history
+			// Get user's mood history and activity history from database
 			const userContext = await step.run("get-user-context", async () => {
-				// Here you would typically fetch user's history from your database
-				return {
-					recentMoods: event.data.recentMoods,
-					completedActivities: event.data.completedActivities,
-					preferences: event.data.preferences,
-				};
+				try {
+					const userId = event.data.userId;
+					if (!userId) {
+						throw new Error("User ID is required for activity recommendations");
+					}
+
+					// Get recent mood data (last 7 days)
+					const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+					const recentMoods = await prisma.mood.findMany({
+						where: {
+							userId,
+							timestamp: { gte: sevenDaysAgo },
+						},
+						orderBy: { timestamp: "desc" },
+						take: 10,
+					});
+
+					// Get recent activities (last 14 days)
+					const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+					const recentActivities = await prisma.activity.findMany({
+						where: {
+							userId,
+							timestamp: { gte: fourteenDaysAgo },
+						},
+						orderBy: { timestamp: "desc" },
+						take: 20,
+					});
+
+					// Get user profile for preferences
+					const user = await prisma.user.findUnique({
+						where: { id: userId },
+						select: { id: true, name: true, email: true },
+					});
+
+					return {
+						recentMoods: recentMoods.map((mood) => ({
+							score: mood.score,
+							note: mood.note,
+							timestamp: mood.timestamp,
+						})),
+						completedActivities: recentActivities.map((activity) => ({
+							type: activity.type,
+							name: activity.name,
+							duration: activity.duration,
+							timestamp: activity.timestamp,
+						})),
+						preferences: user ? { name: user.name } : {},
+						currentMoodScore: event.data.score || null,
+					};
+				} catch (error) {
+					logger.error({ error, userId: event.data.userId }, "Error fetching user context for recommendations:");
+					// Return fallback data
+					return {
+						recentMoods: [],
+						completedActivities: [],
+						preferences: {},
+						currentMoodScore: event.data.score || null,
+					};
+				}
 			});
 
 			// Generate recommendations using Gemini
 			const recommendations = await step.run("generate-recommendations", async () => {
-				const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+				try {
+					const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-				const prompt = `Based on the following user context, generate personalized activity recommendations:
-				User Context: ${JSON.stringify(userContext)}
-				
-				Please provide:
-				1. 3-5 personalized activity recommendations
-				2. Reasoning for each recommendation
-				3. Expected benefits
-				4. Difficulty level
-				5. Estimated duration
-				
-				Format the response as a JSON object.`;
+					const prompt = `Based on the following user context, generate personalized activity recommendations. Return ONLY a valid JSON object with no markdown formatting or additional text.
+					
+					User Context: ${JSON.stringify(userContext)}
+					
+					Required JSON structure:
+					{
+						"recommendations": [
+							{
+								"activityType": "string",
+								"title": "string",
+								"description": "string", 
+								"reasoning": "string",
+								"expectedBenefits": ["string"],
+								"difficultyLevel": "easy|medium|hard",
+								"estimatedDuration": number
+							}
+						]
+					}
+					
+					Provide 3-5 personalized recommendations based on mood patterns and activity history.`;
 
-				const result = await model.generateContent(prompt);
-				const response = result.response;
-				const text = response.text().trim();
+					const result = await model.generateContent(prompt);
+					const response = result.response;
+					const text = response.text().trim();
 
-				return JSON.parse(text);
+					// Clean the response text to ensure it's valid JSON
+					const cleanText = text.replace(/```json\n|\n```/g, "").trim();
+					const parsedRecommendations = JSON.parse(cleanText);
+
+					// Validate and structure the recommendations
+					const validRecommendations = Array.isArray(parsedRecommendations.recommendations)
+						? parsedRecommendations.recommendations.map((rec: any) => ({
+								activityType: rec.activityType || "meditation",
+								title: rec.title || "Wellness Activity",
+								description: rec.description || "A beneficial wellness activity",
+								reasoning: rec.reasoning || "Good for overall wellbeing",
+								expectedBenefits: Array.isArray(rec.expectedBenefits) ? rec.expectedBenefits : ["Improved mood"],
+								difficultyLevel: ["easy", "medium", "hard"].includes(rec.difficultyLevel)
+									? rec.difficultyLevel
+									: "easy",
+								estimatedDuration:
+									typeof rec.estimatedDuration === "number" ? Math.max(5, Math.min(120, rec.estimatedDuration)) : 15,
+						  }))
+						: [];
+
+					return validRecommendations;
+				} catch (error) {
+					logger.error({ error, userContext }, "Error generating activity recommendations with Gemini:");
+					// Return default recommendations
+					return [
+						{
+							activityType: "meditation",
+							title: "5-Minute Breathing Exercise",
+							description: "A simple breathing exercise to help center yourself",
+							reasoning: "Breathing exercises are effective for immediate stress relief",
+							expectedBenefits: ["Reduced stress", "Improved focus"],
+							difficultyLevel: "easy",
+							estimatedDuration: 5,
+						},
+						{
+							activityType: "exercise",
+							title: "10-Minute Walk",
+							description: "Take a gentle walk outside or around your space",
+							reasoning: "Light movement can boost mood and energy",
+							expectedBenefits: ["Improved mood", "Increased energy"],
+							difficultyLevel: "easy",
+							estimatedDuration: 10,
+						},
+					];
+				}
 			});
 
-			// Store the recommendations
-			await step.run("store-recommendations", async () => {
-				// Here you would typically store the recommendations in your database
-				logger.info({ recommendations }, "Activity recommendations stored successfully");
-				return recommendations;
+			// Store the recommendations in database
+			const storedRecommendations = await step.run("store-recommendations", async () => {
+				try {
+					const userId = event.data.userId;
+					if (!userId) {
+						throw new Error("User ID is required to store recommendations");
+					}
+
+					// Store each recommendation as a separate database record
+					const createdRecommendations = await Promise.all(
+						recommendations.map(async (rec: any) => {
+							return await prisma.activityRecommendation.create({
+								data: {
+									userId,
+									activityType: rec.activityType,
+									title: rec.title,
+									description: rec.description,
+									reasoning: rec.reasoning,
+									expectedBenefits: rec.expectedBenefits,
+									difficultyLevel: rec.difficultyLevel,
+									estimatedDuration: rec.estimatedDuration,
+									basedOnMoodScore: userContext.currentMoodScore,
+									contextData: {
+										recentMoodAverage:
+											userContext.recentMoods.length > 0
+												? userContext.recentMoods.reduce((sum: number, mood: any) => sum + mood.score, 0) /
+												  userContext.recentMoods.length
+												: null,
+										recentActivityCount: userContext.completedActivities.length,
+										generatedAt: new Date(),
+									},
+								},
+							});
+						})
+					);
+
+					logger.info(
+						{
+							userId,
+							recommendationCount: createdRecommendations.length,
+							recommendationIds: createdRecommendations.map((r) => r.id),
+							basedOnMoodScore: userContext.currentMoodScore,
+						},
+						"Activity recommendations stored successfully"
+					);
+
+					return createdRecommendations;
+				} catch (error) {
+					logger.error({ error, userId: event.data.userId }, "Error storing activity recommendations:");
+					throw error;
+				}
 			});
 
 			return {
-				message: "Activity recommendations generated",
-				recommendations,
+				message: "Activity recommendations generated and stored",
+				recommendations: storedRecommendations,
+				count: storedRecommendations.length,
 			};
 		} catch (error) {
 			logger.error({ error }, "Error generating activity recommendations:");
