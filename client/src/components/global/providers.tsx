@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { DashboardProvider } from "@/contexts/dashboard-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
 	return (
 		<NextThemesProvider attribute="class" enableSystem disableTransitionOnChange enableColorScheme>
-			{children}
+			<DashboardProvider>{children}</DashboardProvider>
 		</NextThemesProvider>
 	);
 }

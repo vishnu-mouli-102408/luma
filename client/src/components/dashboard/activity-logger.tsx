@@ -19,6 +19,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { useDashboard } from "@/contexts/dashboard-context";
 
 const activityTypes = [
 	{ id: "meditation", name: "Meditation" },
@@ -53,6 +54,7 @@ interface ActivityLoggerProps {
 export function ActivityLogger({ open, onOpenChange, onActivityLogged }: ActivityLoggerProps) {
 	const [isLoading, setIsLoading] = useState(false);
 	const { data, isPending } = authClient.useSession();
+	const { updateActivityOptimistically, refreshData } = useDashboard();
 	const user = data?.user;
 
 	const form = useForm<ActivityFormValues>({
@@ -102,7 +104,12 @@ export function ActivityLogger({ open, onOpenChange, onActivityLogged }: Activit
 			const data = await response.json();
 			console.log("ActivityLogger: Success response:", data);
 
+			updateActivityOptimistically(values.type, values.name);
+
 			toast.success("Activity logged successfully!");
+
+			await refreshData();
+
 			onActivityLogged();
 			onOpenChange(false);
 			form.reset();

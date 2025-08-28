@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { useDashboard } from "@/contexts/dashboard-context";
 
 interface MoodFormProps {
 	onSuccess?: () => void;
@@ -16,6 +17,7 @@ export function MoodForm({ onSuccess }: MoodFormProps) {
 	const [moodScore, setMoodScore] = useState(50);
 	const [isLoading, setIsLoading] = useState(false);
 	const { data: user, isPending } = authClient.useSession();
+	const { updateMoodOptimistically, refreshData } = useDashboard();
 	const router = useRouter();
 
 	const emotions = [
@@ -62,9 +64,12 @@ export function MoodForm({ onSuccess }: MoodFormProps) {
 			const data = await response.json();
 			console.log("MoodForm: Success response:", data);
 
+			updateMoodOptimistically(moodScore);
+
 			toast.success("Mood tracked successfully!");
 
-			// Call onSuccess to close the modal
+			await refreshData();
+
 			onSuccess?.();
 		} catch (error) {
 			console.error("MoodForm: Error:", error);
