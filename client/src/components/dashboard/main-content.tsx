@@ -12,7 +12,6 @@ import {
 	Brain,
 	Trophy,
 	RefreshCw,
-	LucideIcon,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "../ui/button";
@@ -23,6 +22,7 @@ import { MoodForm } from "./mood-form";
 import { format } from "date-fns";
 import { ActivityLogger } from "./activity-logger";
 import { AnxietyGames } from "../games/anxiety-games";
+import { RecommendationWidget } from "./recommendation-widget";
 import { useRouter } from "next/navigation";
 import { Spinner } from "../ui/spinner";
 
@@ -50,14 +50,6 @@ const DashboardMainContent = () => {
 	const { state, refreshData, clearError } = useDashboard();
 	const { stats, isLoading, error } = state;
 
-	const [insights] = useState<
-		{
-			title: string;
-			description: string;
-			icon: LucideIcon;
-			priority: "low" | "medium" | "high";
-		}[]
-	>([]);
 	const handleStartTherapy = () => {
 		router.push("/therapy/new");
 	};
@@ -98,11 +90,11 @@ const DashboardMainContent = () => {
 		},
 		{
 			title: "Completion Rate",
-			value: `${stats?.completionRate || 100}%`,
+			value: `${stats?.completionRate || 0}%`,
 			icon: Trophy,
 			color: "text-yellow-500",
 			bgColor: "bg-yellow-500/10",
-			description: "Perfect completion rate",
+			description: "Recommendations completed",
 		},
 		{
 			title: "Therapy Sessions",
@@ -277,46 +269,8 @@ const DashboardMainContent = () => {
 					</CardContent>
 				</Card>
 
-				{/* Insights Card */}
-				<Card className="rounded-xl border border-border bg-card/80 supports-[backdrop-filter]:bg-card/60 backdrop-blur shadow-sm">
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2 tracking-tight">
-							<BrainCircuit className="w-5 h-5 text-primary" />
-							Insights
-						</CardTitle>
-						<CardDescription>Personalized recommendations based on your activity patterns</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-4">
-							{insights.length > 0 ? (
-								insights.map((insight, index) => (
-									<div
-										key={index}
-										className={cn(
-											"p-4 rounded-lg space-y-2 transition-colors ring-1 ring-border",
-											insight.priority === "high"
-												? "bg-primary/10"
-												: insight.priority === "medium"
-												? "bg-primary/5"
-												: "bg-muted"
-										)}
-									>
-										<div className="flex items-center gap-2">
-											<insight.icon className="w-5 h-5 text-primary" />
-											<p className="font-medium">{insight.title}</p>
-										</div>
-										<p className="text-sm text-muted-foreground">{insight.description}</p>
-									</div>
-								))
-							) : (
-								<div className="text-center text-muted-foreground py-8">
-									<Activity className="w-8 h-8 mx-auto mb-3 opacity-50" />
-									<p>Complete more activities to receive personalized insights</p>
-								</div>
-							)}
-						</div>
-					</CardContent>
-				</Card>
+				{/* AI Recommendations Widget */}
+				<RecommendationWidget />
 				{showActivityLogger && (
 					<ActivityLogger
 						open={showActivityLogger}
@@ -329,12 +283,9 @@ const DashboardMainContent = () => {
 				)}
 			</div>
 
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				{/* Left side - Spans 2 columns */}
-				<div className="lg:col-span-3 space-y-6">
-					{/* Anxiety Games - Now directly below Fitbit */}
-					<AnxietyGames onGamePlayed={handleGamePlayed} />
-				</div>
+			{/* Anxiety Games - Full Width */}
+			<div className="w-full">
+				<AnxietyGames onGamePlayed={handleGamePlayed} />
 			</div>
 
 			{showMoodModal && (
