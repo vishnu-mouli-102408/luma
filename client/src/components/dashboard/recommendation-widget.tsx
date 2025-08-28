@@ -41,11 +41,7 @@ const getDifficultyColor = (level: string) => {
 	}
 };
 
-interface RecommendationWidgetProps {
-	className?: string;
-}
-
-export function RecommendationWidget({}: RecommendationWidgetProps) {
+export function RecommendationWidget() {
 	const { recommendations, isLoading, markAsCompleted, isCompleting, hasActiveRecommendations } =
 		useActivityRecommendations();
 

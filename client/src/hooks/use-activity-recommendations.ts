@@ -28,22 +28,18 @@ interface RecommendationStats {
 }
 
 interface UseActivityRecommendationsReturn {
-	// Data
 	recommendations: ActivityRecommendation[];
 	stats: RecommendationStats | null;
 
-	// Loading states
 	isLoading: boolean;
 	isGenerating: boolean;
 	isCompleting: (id: string) => boolean;
 
-	// Actions
 	fetchRecommendations: () => Promise<void>;
 	generateRecommendations: (forceRegenerate?: boolean) => Promise<void>;
 	markAsCompleted: (id: string) => Promise<void>;
 	refreshStats: () => Promise<void>;
 
-	// Utilities
 	hasActiveRecommendations: boolean;
 	canGenerateMore: boolean;
 }
@@ -57,7 +53,6 @@ export function useActivityRecommendations(): UseActivityRecommendationsReturn {
 
 	const { data: user } = authClient.useSession();
 
-	// Fetch active recommendations
 	const fetchRecommendations = useCallback(async () => {
 		if (!user) return;
 
@@ -90,7 +85,6 @@ export function useActivityRecommendations(): UseActivityRecommendationsReturn {
 		}
 	}, [user]);
 
-	// Fetch recommendation statistics
 	const refreshStats = useCallback(async () => {
 		if (!user) return;
 
@@ -116,7 +110,6 @@ export function useActivityRecommendations(): UseActivityRecommendationsReturn {
 		}
 	}, [user]);
 
-	// Generate new recommendations
 	const generateRecommendations = useCallback(
 		async (forceRegenerate = false) => {
 			if (!user) return;
@@ -162,7 +155,6 @@ export function useActivityRecommendations(): UseActivityRecommendationsReturn {
 		[user, fetchRecommendations]
 	);
 
-	// Mark recommendation as completed
 	const markAsCompleted = useCallback(
 		async (recommendationId: string) => {
 			if (!user) return;
@@ -207,7 +199,6 @@ export function useActivityRecommendations(): UseActivityRecommendationsReturn {
 		[user, refreshStats]
 	);
 
-	// Check if a recommendation is being completed
 	const isCompleting = useCallback(
 		(id: string) => {
 			return completingIds.has(id);
@@ -221,27 +212,22 @@ export function useActivityRecommendations(): UseActivityRecommendationsReturn {
 		}
 	}, [user, fetchRecommendations, refreshStats]);
 
-	// Computed values
 	const hasActiveRecommendations = recommendations.length > 0;
 	const canGenerateMore = !isGenerating && user !== null;
 
 	return {
-		// Data
 		recommendations,
 		stats,
 
-		// Loading states
 		isLoading,
 		isGenerating,
 		isCompleting,
 
-		// Actions
 		fetchRecommendations,
 		generateRecommendations,
 		markAsCompleted,
 		refreshStats,
 
-		// Utilities
 		hasActiveRecommendations,
 		canGenerateMore,
 	};

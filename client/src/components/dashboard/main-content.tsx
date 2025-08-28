@@ -249,7 +249,7 @@ const DashboardMainContent = () => {
 										<stat.icon className={cn("w-5 h-5", stat.color)} />
 										<p className="text-sm font-medium">{stat.title}</p>
 									</div>
-									<p className="text-2xl font-bold mt-2">{stat.value}</p>
+									<p className="text-lg font-bold mt-2">{stat.value}</p>
 									<p className="text-sm text-muted-foreground mt-1">{stat.description}</p>
 								</div>
 							))}
@@ -269,21 +269,10 @@ const DashboardMainContent = () => {
 					</CardContent>
 				</Card>
 
-				{/* AI Recommendations Widget */}
 				<RecommendationWidget />
-				{showActivityLogger && (
-					<ActivityLogger
-						open={showActivityLogger}
-						onOpenChange={setShowActivityLogger}
-						onActivityLogged={() => {
-							// Data will be automatically updated via context
-							console.log("Activity logged successfully");
-						}}
-					/>
-				)}
+				{showActivityLogger && <ActivityLogger open={showActivityLogger} onOpenChange={setShowActivityLogger} />}
 			</div>
 
-			{/* Anxiety Games - Full Width */}
 			<div className="w-full">
 				<AnxietyGames onGamePlayed={handleGamePlayed} />
 			</div>
@@ -299,7 +288,6 @@ const DashboardMainContent = () => {
 						<MoodForm
 							onSuccess={() => {
 								setShowMoodModal(false);
-								// Data will be automatically updated via context
 							}}
 						/>
 					</DialogContent>

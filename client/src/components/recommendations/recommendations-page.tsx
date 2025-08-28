@@ -26,17 +26,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-/**
- * Comprehensive Activity Recommendations Page
- *
- * Features:
- * - Paginated recommendations view
- * - Filter by completion status
- * - Sort by date/difficulty
- * - Bulk actions
- * - Detailed statistics
- */
-
 interface ActivityRecommendation {
 	id: string;
 	activityType: string;
@@ -305,13 +294,9 @@ export function RecommendationsPage() {
 			}
 		});
 
-	// Initial load
 	useEffect(() => {
 		if (user) {
-			Promise.all([
-				fetchRecommendations(1, 10), // Start with page 1
-				fetchStats(),
-			]);
+			Promise.all([fetchRecommendations(1, 10), fetchStats()]);
 		}
 	}, [user, fetchRecommendations, fetchStats]);
 

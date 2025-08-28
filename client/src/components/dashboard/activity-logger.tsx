@@ -48,10 +48,9 @@ type ActivityFormValues = z.infer<typeof activityFormSchema>;
 interface ActivityLoggerProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onActivityLogged: () => void;
 }
 
-export function ActivityLogger({ open, onOpenChange, onActivityLogged }: ActivityLoggerProps) {
+export function ActivityLogger({ open, onOpenChange }: ActivityLoggerProps) {
 	const [isLoading, setIsLoading] = useState(false);
 	const { data, isPending } = authClient.useSession();
 	const { updateActivityOptimistically, refreshData } = useDashboard();
@@ -110,7 +109,6 @@ export function ActivityLogger({ open, onOpenChange, onActivityLogged }: Activit
 
 			await refreshData();
 
-			onActivityLogged();
 			onOpenChange(false);
 			form.reset();
 		} catch (error) {
