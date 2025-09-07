@@ -111,7 +111,6 @@ export function RecommendationWidget() {
 			<CardContent>
 				{topRecommendation && (
 					<div className="space-y-3">
-						{/* Main content */}
 						<div className="flex items-start gap-3">
 							<span className="text-xl flex-shrink-0">{getActivityTypeIcon(topRecommendation.activityType)}</span>
 							<div className="flex-1 min-w-0">
@@ -120,7 +119,6 @@ export function RecommendationWidget() {
 							</div>
 						</div>
 
-						{/* Badges */}
 						<div className="flex items-center gap-1 flex-wrap">
 							<Badge variant="outline" className={cn("text-xs", getDifficultyColor(topRecommendation.difficultyLevel))}>
 								{topRecommendation.difficultyLevel}
@@ -137,7 +135,6 @@ export function RecommendationWidget() {
 							</Badge>
 						</div>
 
-						{/* Benefits */}
 						{topRecommendation.expectedBenefits.length > 0 && (
 							<div className="text-xs text-muted-foreground">
 								💡 {topRecommendation.expectedBenefits.slice(0, 2).join(", ")}
@@ -145,7 +142,6 @@ export function RecommendationWidget() {
 							</div>
 						)}
 
-						{/* Action */}
 						<div className="flex items-center gap-2 pt-1">
 							<Button
 								size="sm"

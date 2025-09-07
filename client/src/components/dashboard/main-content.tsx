@@ -51,10 +51,8 @@ const DashboardMainContent = () => {
 	const { stats, isLoading, error } = state;
 
 	const handleStartTherapy = () => {
-		// Generate a temporary UUID for the new session
 		const tempSessionId = crypto.randomUUID();
 
-		// Navigate to the new session (will be client-side only until first message)
 		router.push(`/therapy/${tempSessionId}`);
 	};
 
@@ -76,7 +74,7 @@ const DashboardMainContent = () => {
 		if (error) {
 			const timer = setTimeout(() => {
 				clearError();
-			}, 5000); // Auto-clear error after 5 seconds
+			}, 5000);
 
 			return () => clearTimeout(timer);
 		}
@@ -135,9 +133,7 @@ const DashboardMainContent = () => {
 
 	return (
 		<div className="space-y-6">
-			{/* Top Cards Grid */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{/* Quick Actions Card */}
 				<Card className="relative overflow-hidden py-0 group rounded-xl border border-border bg-card/80 supports-[backdrop-filter]:bg-card/60 backdrop-blur shadow-sm">
 					<div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent" />
 					<CardContent className="p-6 relative">
@@ -222,7 +218,6 @@ const DashboardMainContent = () => {
 					</CardContent>
 				</Card>
 
-				{/* Today's Overview Card */}
 				<Card className="rounded-xl border border-border bg-card/80 supports-[backdrop-filter]:bg-card/60 backdrop-blur shadow-sm">
 					<CardHeader>
 						<div className="flex items-center justify-between">

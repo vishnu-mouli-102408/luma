@@ -130,7 +130,6 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 			setCurrentSession(sessionData);
 			setMessages(sessionData.messages);
 		} catch {
-			// If session doesn't exist in database, it's a new session
 			console.log("Session not found in database, treating as new session");
 			setCurrentSession({
 				sessionId,
@@ -154,10 +153,8 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 	}, [mounted, loadSessions, loadCurrentSession]);
 
 	const createNewSession = () => {
-		// Generate a temporary UUID for the new session
 		const tempSessionId = crypto.randomUUID();
 
-		// Navigate to the new session (will be client-side only until first message)
 		router.push(`/therapy/${tempSessionId}`);
 	};
 
@@ -167,16 +164,13 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 		}
 	};
 
-	// Delete session
 	const deleteSession = async (sessionIdToDelete: string) => {
 		try {
 			setDeletingSessionId(sessionIdToDelete);
 			await chatAPI.deleteSession(sessionIdToDelete);
 
-			// Remove from sessions list
 			setSessions((prev) => prev.filter((session) => session.sessionId !== sessionIdToDelete));
 
-			// If we're deleting the current session, redirect to a new session or dashboard
 			if (sessionIdToDelete === sessionId) {
 				const remainingSessions = sessions.filter((session) => session.sessionId !== sessionIdToDelete);
 				if (remainingSessions.length > 0) {
@@ -222,7 +216,6 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 
 			setMessages((prev) => [...prev, assistantMessage]);
 
-			// Refresh sessions to show the new session in sidebar
 			loadSessions();
 		} catch (error) {
 			console.error("Error sending message:", error);
@@ -257,7 +250,6 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 	return (
 		<div className="relative max-w-7xl h-screen flex min-h-screen mx-auto px-4">
 			<div className="flex flex-1 justify-center h-[calc(100vh-4rem)] my-auto gap-6">
-				{/* Sidebar with chat history */}
 				<div className="w-80 flex flex-col rounded-xl border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm overflow-hidden">
 					<div className="p-4 border-b bg-background/50">
 						<div className="flex items-center gap-2 mb-4">
@@ -364,9 +356,7 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 					</ScrollArea>
 				</div>
 
-				{/* Main chat area */}
 				<div className="flex-1 flex flex-col overflow-hidden rounded-2xl border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-					{/* Chat header */}
 					<div className="p-4 border-b sticky top-0 z-10 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20">
@@ -599,7 +589,6 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 				</div>
 			</div>
 
-			{/* Delete Confirmation Dialog */}
 			{showDeleteConfirm && (
 				<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 					<motion.div
