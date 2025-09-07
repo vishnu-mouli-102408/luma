@@ -26,7 +26,7 @@ export interface ChatSession {
 	status: string;
 }
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export const chatAPI = {
 	// Create a new chat session
