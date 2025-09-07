@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-export async function POST(request: NextRequest, { params }: { params: { sessionId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ sessionId: string }> }) {
 	try {
-		const { sessionId } = params;
+		const { sessionId } = await params;
 		const body = await request.json();
 
 		const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionId}/messages`, {
