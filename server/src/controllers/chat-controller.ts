@@ -58,8 +58,12 @@ export const sendMessage = async (req: Request, res: Response) => {
 
 		logger.info({ sessionId, message }, "Processing message");
 
-		// Find session by sessionId
-		const session = await prisma.chatSession?.findUnique({
+		if (!userId) {
+			return res.status(401).json({ message: "Unauthorized - User not authenticated" });
+		}
+
+		// Find session by sessionId, create if doesn't exist
+		let session = await prisma.chatSession.findUnique({
 			where: {
 				sessionId,
 			},
@@ -67,9 +71,33 @@ export const sendMessage = async (req: Request, res: Response) => {
 				messages: true,
 			},
 		});
+
+		// If session doesn't exist, create it (this handles client-side generated session IDs)
 		if (!session) {
-			logger.warn({ sessionId }, "Session not found");
-			return res.status(404).json({ message: "Session not found" });
+			logger.info({ sessionId }, "Session not found, creating new session");
+			const newSession = await prisma.chatSession.create({
+				data: {
+					sessionId: sessionId || Bun.randomUUIDv7(),
+					userId: userId!,
+					startTime: new Date(),
+					status: "active",
+				},
+			});
+
+			// Fetch the created session with messages included
+			session = await prisma.chatSession.findUnique({
+				where: {
+					id: newSession.id,
+				},
+				include: {
+					messages: true,
+				},
+			});
+		}
+
+		if (!session) {
+			logger.error({ sessionId }, "Failed to create or find session");
+			return res.status(500).json({ message: "Internal server error" });
 		}
 
 		if (session.userId !== userId) {

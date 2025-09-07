@@ -47,36 +47,15 @@ const DashboardMainContent = () => {
 	const [showActivityLogger, setShowActivityLogger] = useState(false);
 	const router = useRouter();
 
-	const [loading, setLoading] = useState(false);
-
 	const { state, refreshData, clearError } = useDashboard();
 	const { stats, isLoading, error } = state;
 
-	const handleStartTherapy = async () => {
-		try {
-			setLoading(true);
-			const response = await fetch("/api/chat/sessions", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-			});
+	const handleStartTherapy = () => {
+		// Generate a temporary UUID for the new session
+		const tempSessionId = crypto.randomUUID();
 
-			if (!response.ok) {
-				throw new Error("Failed to create chat session");
-			}
-
-			const data = await response.json();
-			const sessionId = data.sessionId;
-
-			// Navigate to the new session
-			router.push(`/therapy/${sessionId}`);
-		} catch (error) {
-			console.error("Error creating chat session:", error);
-			toast.error("Failed to start therapy session");
-		} finally {
-			setLoading(false);
-		}
+		// Navigate to the new session (will be client-side only until first message)
+		router.push(`/therapy/${tempSessionId}`);
 	};
 
 	useEffect(() => {
@@ -183,31 +162,20 @@ const DashboardMainContent = () => {
 									className={cn(
 										"w-full justify-between rounded-xl cursor-pointer items-center p-6 h-auto group/button",
 										"bg-gradient-to-r from-primary to-primary/90 hover:to-primary",
-										"transition-all duration-200 group-hover:translate-y-[-2px]",
-										loading && "opacity-70 cursor-not-allowed"
+										"transition-all duration-200 group-hover:translate-y-[-2px]"
 									)}
 									onClick={handleStartTherapy}
-									disabled={loading}
 								>
 									<div className="flex items-center gap-3">
 										<div className="w-8 h-8 rounded-full bg-white/10 ring-1 ring-white/20 flex items-center justify-center">
-											{loading ? (
-												<div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
-											) : (
-												<MessageSquare className="w-4 h-4 text-white" />
-											)}
+											<MessageSquare className="w-4 h-4 text-white" />
 										</div>
 										<div className="text-left">
-											<div className="font-semibold text-white">{loading ? "Starting..." : "Start Therapy"}</div>
-											<div className="text-xs text-white/80">{loading ? "Please wait..." : "Begin a new session"}</div>
+											<div className="font-semibold text-white">Start Therapy</div>
+											<div className="text-xs text-white/80">Begin a new session</div>
 										</div>
 									</div>
-									<div
-										className={cn(
-											"transition-opacity",
-											loading ? "opacity-0" : "opacity-0 group-hover/button:opacity-100"
-										)}
-									>
+									<div className="opacity-0 group-hover/button:opacity-100 transition-opacity">
 										<ArrowRight className="w-5 h-5 text-white" />
 									</div>
 								</Button>

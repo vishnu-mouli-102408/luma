@@ -3,18 +3,7 @@ import { ChatMessage, ChatSession, chatAPI } from "@/lib/api/chat";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Spinner } from "../ui/spinner";
 import { Button } from "../ui/button";
-import {
-	Bot,
-	Loader2,
-	MessageSquare,
-	PlusCircle,
-	Send,
-	Sparkles,
-	User,
-	ChevronRight,
-	MoreHorizontal,
-	Trash2,
-} from "lucide-react";
+import { Bot, Loader2, MessageSquare, Send, Sparkles, User, ChevronRight, MoreHorizontal, Trash2 } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -129,9 +118,18 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 			const sessionData = await chatAPI.getSession(sessionId);
 			setCurrentSession(sessionData);
 			setMessages(sessionData.messages);
-		} catch (error) {
-			console.error("Error loading session:", error);
-			toast.error("Failed to load chat session");
+		} catch {
+			// If session doesn't exist in database, it's a new session
+			console.log("Session not found in database, treating as new session");
+			setCurrentSession({
+				sessionId,
+				messages: [],
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				startTime: new Date(),
+				status: "active",
+			});
+			setMessages([]);
 		} finally {
 			setIsLoading(false);
 		}
@@ -144,14 +142,12 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 		}
 	}, [mounted, loadSessions, loadCurrentSession]);
 
-	const createNewSession = async () => {
-		try {
-			const newSession = await chatAPI.createSession();
-			router.push(`/therapy/${newSession.sessionId}`);
-		} catch (error) {
-			console.error("Error creating session:", error);
-			toast.error("Failed to create new session");
-		}
+	const createNewSession = () => {
+		// Generate a temporary UUID for the new session
+		const tempSessionId = crypto.randomUUID();
+
+		// Navigate to the new session (will be client-side only until first message)
+		router.push(`/therapy/${tempSessionId}`);
 	};
 
 	const switchToSession = (sessionId: string) => {
@@ -215,6 +211,7 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 
 			setMessages((prev) => [...prev, assistantMessage]);
 
+			// Refresh sessions to show the new session in sidebar
 			loadSessions();
 		} catch (error) {
 			console.error("Error sending message:", error);
@@ -254,23 +251,12 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 					<div className="p-4 border-b bg-background/50">
 						<div className="flex items-center justify-between mb-4">
 							<h2 className="text-lg font-semibold tracking-tight">Chat Sessions</h2>
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={createNewSession}
-								className="hover:bg-primary/10 cursor-pointer transition-transform active:scale-95"
-								disabled={isLoadingSessions}
-							>
-								{isLoadingSessions ? <Loader2 className="w-5 h-5 animate-spin" /> : <PlusCircle className="w-5 h-5" />}
-							</Button>
 						</div>
 						<Button
 							variant="outline"
 							className="w-full justify-start gap-2 rounded-lg hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer"
 							onClick={createNewSession}
-							disabled={isLoadingSessions}
 						>
-							{isLoadingSessions ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
 							New Session
 						</Button>
 					</div>
