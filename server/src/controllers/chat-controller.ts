@@ -259,3 +259,75 @@ export const getChatHistory = async (req: Request, res: Response) => {
 		res.status(500).json({ message: "Error fetching chat history" });
 	}
 };
+
+// Get all chat sessions for a user
+export const getAllChatSessions = async (req: Request, res: Response) => {
+	try {
+		const userId = req.user?.id;
+
+		if (!userId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const sessions = await prisma.chatSession.findMany({
+			where: {
+				userId,
+			},
+			include: {
+				messages: {
+					orderBy: {
+						timestamp: "asc",
+					},
+				},
+			},
+			orderBy: {
+				updatedAt: "desc",
+			},
+		});
+
+		res.json(sessions);
+	} catch (error) {
+		logger.error(error, "Error fetching chat sessions");
+		res.status(500).json({ message: "Error fetching chat sessions" });
+	}
+};
+
+// Delete a chat session
+export const deleteChatSession = async (req: Request, res: Response) => {
+	try {
+		const { sessionId } = req.params;
+		const userId = req.user?.id;
+
+		if (!userId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		// First check if the session exists and belongs to the user
+		const session = await prisma.chatSession.findUnique({
+			where: {
+				sessionId,
+			},
+		});
+
+		if (!session) {
+			return res.status(404).json({ message: "Chat session not found" });
+		}
+
+		if (session.userId !== userId) {
+			return res.status(403).json({ message: "Unauthorized to delete this session" });
+		}
+
+		// Delete the session (messages will be cascade deleted due to foreign key constraint)
+		await prisma.chatSession.delete({
+			where: {
+				sessionId,
+			},
+		});
+
+		logger.info({ sessionId, userId }, "Chat session deleted successfully");
+		res.json({ message: "Chat session deleted successfully" });
+	} catch (error) {
+		logger.error(error, "Error deleting chat session");
+		res.status(500).json({ message: "Error deleting chat session" });
+	}
+};

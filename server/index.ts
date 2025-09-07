@@ -32,7 +32,7 @@ function main() {
 		app.all("/api/auth/{*any}", toNodeHandler(auth));
 		app.use(express.json());
 		app.use(helmet()); // Security headers
-		app.use(loggerMiddleware); // Logger middleware
+		// app.use(loggerMiddleware); // Logger middleware
 		app.use(errorHandler); // Error handling middleware
 
 		// Set up Inngest endpoint
