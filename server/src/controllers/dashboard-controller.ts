@@ -24,14 +24,11 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
 			});
 		}
 
-		// Define today's time range
 		const today = new Date();
 		const startOfToday = startOfDay(today);
 		const endOfToday = endOfDay(today);
 
-		// Fetch today's mood entries using parallel queries for better performance
 		const [todaysMoods, todaysActivities, allTherapySessions, recentMoods] = await Promise.all([
-			// Today's mood entries
 			prisma.mood.findMany({
 				where: {
 					userId,
@@ -85,7 +82,6 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
 				? Math.round(todaysMoods.reduce((sum, mood) => sum + mood.score, 0) / todaysMoods.length)
 				: null;
 
-		// Calculate activity breakdown by type
 		const activityBreakdown = todaysActivities.reduce((acc, activity) => {
 			const existingType = acc.find((item) => item.type === activity.type);
 			if (existingType) {
@@ -96,7 +92,6 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
 			return acc;
 		}, [] as Array<{ type: string; count: number }>);
 
-		// Get recommendation completion rate
 		const [totalRecommendations, completedRecommendations] = await Promise.all([
 			prisma.activityRecommendation.count({
 				where: { userId },
@@ -109,7 +104,6 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
 		const recommendationCompletionRate =
 			totalRecommendations > 0 ? Math.round((completedRecommendations / totalRecommendations) * 100) : 0;
 
-		// Prepare dashboard statistics
 		const dashboardStats: DashboardStats = {
 			moodScore: averageMoodScore,
 			completionRate: recommendationCompletionRate,
@@ -155,7 +149,6 @@ export const getActivityHistory = async (req: Request, res: Response, next: Next
 			});
 		}
 
-		// Get last 30 days of activities
 		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
 		const activities = await prisma.activity.findMany({
@@ -196,7 +189,6 @@ export const getMoodTrends = async (req: Request, res: Response, next: NextFunct
 			});
 		}
 
-		// Get last 30 days of mood entries
 		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
 		const moods = await prisma.mood.findMany({
@@ -214,7 +206,6 @@ export const getMoodTrends = async (req: Request, res: Response, next: NextFunct
 			},
 		});
 
-		// Calculate trend statistics
 		const averageScore = moods.length > 0 ? moods.reduce((sum, mood) => sum + mood.score, 0) / moods.length : 0;
 
 		res.status(200).json({

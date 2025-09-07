@@ -4,7 +4,6 @@ import { prisma } from "../lib/db";
 import { logger } from "../lib/logger";
 import { sendMoodUpdateEvent } from "../lib/inngest-events";
 
-// Create a new mood entry
 export const createMood = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const parsedPayload = moodSchema.safeParse(req?.body);
@@ -15,7 +14,7 @@ export const createMood = async (req: Request, res: Response, next: NextFunction
 
 		const { score, note, timestamp = new Date().toISOString() } = parsedPayload.data;
 
-		const userId = req.user?.id; // From auth middleware
+		const userId = req.user?.id;
 
 		if (!userId) {
 			return res.status(401).json({ message: "User not authenticated", success: false });
@@ -32,7 +31,6 @@ export const createMood = async (req: Request, res: Response, next: NextFunction
 
 		logger.info(`Mood entry created for user ${userId}`);
 
-		// Send mood update event to Inngest
 		await sendMoodUpdateEvent({
 			userId,
 			score,

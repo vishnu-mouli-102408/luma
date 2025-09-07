@@ -3,7 +3,18 @@ import { ChatMessage, ChatSession, chatAPI } from "@/lib/api/chat";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Spinner } from "../ui/spinner";
 import { Button } from "../ui/button";
-import { Bot, Loader2, MessageSquare, Send, Sparkles, User, ChevronRight, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+	Bot,
+	Loader2,
+	MessageSquare,
+	Send,
+	Sparkles,
+	User,
+	ChevronRight,
+	MoreHorizontal,
+	Trash2,
+	ArrowLeft,
+} from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -249,7 +260,13 @@ const TherapyMainContent = ({ sessionId }: TherapyMainContentProps) => {
 				{/* Sidebar with chat history */}
 				<div className="w-80 flex flex-col rounded-xl border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm overflow-hidden">
 					<div className="p-4 border-b bg-background/50">
-						<div className="flex items-center justify-between mb-4">
+						<div className="flex items-center gap-2 mb-4">
+							<div
+								className="justify-start gap-2 rounded-lg hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer"
+								onClick={() => router.push("/dashboard")}
+							>
+								<ArrowLeft className="w-4 h-4" />
+							</div>
 							<h2 className="text-lg font-semibold tracking-tight">Chat Sessions</h2>
 						</div>
 						<Button

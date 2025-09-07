@@ -5,10 +5,8 @@ import type { InngestEvent } from "../types/inngest";
 import { inngest } from "../inngest/client";
 import { genAI } from "../lib/ai";
 
-// Create a new chat session
 export const createChatSession = async (req: Request, res: Response) => {
 	try {
-		// Check if user is authenticated
 		if (!req.user || !req.user.id) {
 			return res.status(401).json({ message: "Unauthorized - User not authenticated" });
 		}
@@ -22,7 +20,6 @@ export const createChatSession = async (req: Request, res: Response) => {
 			return res.status(404).json({ message: "User not found" });
 		}
 
-		// Generate a unique sessionId
 		const sessionId = Bun.randomUUIDv7();
 
 		const session = await prisma.chatSession.create({
@@ -49,7 +46,6 @@ export const createChatSession = async (req: Request, res: Response) => {
 	}
 };
 
-// Send a message in the chat session
 export const sendMessage = async (req: Request, res: Response) => {
 	try {
 		const { sessionId } = req.params;
@@ -62,7 +58,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 			return res.status(401).json({ message: "Unauthorized - User not authenticated" });
 		}
 
-		// Find session by sessionId, create if doesn't exist
 		let session = await prisma.chatSession.findUnique({
 			where: {
 				sessionId,
@@ -72,7 +67,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 			},
 		});
 
-		// If session doesn't exist, create it (this handles client-side generated session IDs)
 		if (!session) {
 			logger.info({ sessionId }, "Session not found, creating new session");
 			const newSession = await prisma.chatSession.create({
@@ -84,7 +78,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 				},
 			});
 
-			// Fetch the created session with messages included
 			session = await prisma.chatSession.findUnique({
 				where: {
 					id: newSession.id,
@@ -105,7 +98,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 			return res.status(403).json({ message: "Unauthorized" });
 		}
 
-		// Create Inngest event for message processing
 		const event: InngestEvent = {
 			name: "therapy/session.message",
 			data: {
@@ -134,13 +126,10 @@ export const sendMessage = async (req: Request, res: Response) => {
 
 		logger.info({ event }, "Sending message to Inngest");
 
-		// Send event to Inngest for logging and analytics
 		await inngest.send(event);
 
-		// Process the message directly using Gemini
 		const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-		// Analyze the message
 		const analysisPrompt = `Analyze this therapy message and provide insights. Return ONLY a valid JSON object with no markdown formatting or additional text.
 	  Message: ${message}
 	  Context: ${JSON.stringify({
@@ -164,7 +153,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 
 		logger.info({ analysis }, "Message analysis");
 
-		// Generate therapeutic response
 		const responsePrompt = `${event.data.systemPrompt}
 	  
 	  Based on the following context, generate a therapeutic response:
@@ -185,7 +173,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 
 		logger.info({ response }, "Generated response");
 
-		// Add message to session history
 		await prisma.chatMessage.create({
 			data: {
 				sessionId: session.id,
@@ -211,10 +198,8 @@ export const sendMessage = async (req: Request, res: Response) => {
 			},
 		});
 
-		// Save the updated session
 		logger.info({ sessionId }, "Session updated successfully");
 
-		// Return the response
 		res.json({
 			response,
 			message: response,
@@ -264,7 +249,6 @@ export const getChatHistory = async (req: Request, res: Response) => {
 		const { sessionId } = req.params;
 		const userId = req.user?.id;
 
-		// Find session by sessionId instead of _id
 		const session = await prisma.chatSession?.findUnique({
 			where: {
 				sessionId,
@@ -288,7 +272,6 @@ export const getChatHistory = async (req: Request, res: Response) => {
 	}
 };
 
-// Get all chat sessions for a user
 export const getAllChatSessions = async (req: Request, res: Response) => {
 	try {
 		const userId = req.user?.id;
@@ -330,7 +313,6 @@ export const deleteChatSession = async (req: Request, res: Response) => {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 
-		// First check if the session exists and belongs to the user
 		const session = await prisma.chatSession.findUnique({
 			where: {
 				sessionId,
@@ -345,7 +327,6 @@ export const deleteChatSession = async (req: Request, res: Response) => {
 			return res.status(403).json({ message: "Unauthorized to delete this session" });
 		}
 
-		// Delete the session (messages will be cascade deleted due to foreign key constraint)
 		await prisma.chatSession.delete({
 			where: {
 				sessionId,

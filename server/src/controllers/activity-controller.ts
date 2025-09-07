@@ -4,7 +4,6 @@ import { activitySchema } from "../types/activity";
 import { prisma } from "../lib/db";
 import { sendActivityCompletionEvent } from "../lib/inngest-events";
 
-// Log a new activity
 export const logActivity = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const parsedPayload = activitySchema?.safeParse(req.body);
@@ -32,7 +31,6 @@ export const logActivity = async (req: Request, res: Response, next: NextFunctio
 
 		logger.info(`Activity logged: ${activity.id}`);
 
-		// Send activity completion event to Inngest
 		await sendActivityCompletionEvent({
 			userId,
 			id: activity.id,
