@@ -7,7 +7,12 @@ dotenv.config();
 
 export const auth = betterAuth({
 	secret: process.env.BETTER_AUTH_SECRET as string,
-	trustedOrigins: ["http://localhost:3000", "https://luma-nu.vercel.app", "http://localhost:8080"],
+	trustedOrigins: [
+		"http://localhost:3000",
+		"https://luma-nu.vercel.app",
+		"https://luma-8sjf.onrender.com",
+		"http://localhost:8080",
+	],
 	database: prismaAdapter(prisma, {
 		provider: "postgresql",
 	}),
@@ -23,12 +28,10 @@ export const auth = betterAuth({
 		},
 	},
 	advanced: {
-		crossSubDomainCookies: { enabled: true, domain: "localhost" },
 		defaultCookieAttributes: {
-			sameSite: "lax",
-			secure: false,
-			domain: "localhost",
+			sameSite: "None",
+			secure: true,
 		},
-		useSecureCookies: false,
+		useSecureCookies: true,
 	},
 });
